@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 from logger import logger
 from openairequest import request_openai
-from crowler import get_content
+import crowler
 
 load_dotenv()
 
@@ -41,7 +41,7 @@ async def get_comments(request: Request):
         return {"comment": openai_response}
     except Exception as e:
         error_message = str(e)
-        logger.error(f'Error generating comment: {error_message}')
+        logger.error(f'Error generating comment: {error_message}', e)
         raise HTTPException(status_code=500, detail=error_message)
   
 @app.post("/content")
@@ -51,13 +51,14 @@ async def get_content(request: Request):
     url = request_body.get("url")
     
     try:
-        content = get_content(url)
+        content = crowler.get_content(url)
+        logger.info(content)
         logger.info(f'Content extracted successfully, length: {len(content) if content else 0} characters')
         return {"content": content}
     
     except Exception as e:
         error_message = str(e)
-        logger.error(f'Error extracting content: {error_message}')
+        logger.error(f'Error extracting content: {error_message}', e)
         raise HTTPException(status_code=500, detail=error_message)
 
 if __name__ == "__main__":

@@ -1,21 +1,11 @@
 import time
-import logging
 import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler()  # This ensures logs go to console
-    ]
-)
-logger = logging.getLogger(__name__)
+from logger import logger
 
 def get_driver():
     chrome_driver_path = os.getenv('CHROME_DRIVER_PATH')
@@ -59,17 +49,17 @@ def get_content(url:str) -> str:
                 
             except (TimeoutException, NoSuchElementException) as e:
                 error_msg = f"Content not found on page: {str(e)}"
-                logger.error(error_msg)
+                logger.error(error_msg, e)
                 raise Exception(error_msg)
             
         except WebDriverException as e:
             error_msg = f"WebDriver error: {str(e)}"
-            logger.error(error_msg)
+            logger.error(error_msg, e)
             raise Exception(error_msg)
             
     except Exception as e:
         error_msg = f"Unexpected error: {str(e)}"
-        logger.error(error_msg)
+        logger.error(error_msg, e)
         raise Exception(error_msg)
 
     finally:

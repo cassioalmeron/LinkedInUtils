@@ -1,4 +1,5 @@
 import os
+import traceback
 from datetime import datetime
 
 log_dir = "logs"
@@ -16,10 +17,16 @@ def log_info(message):
     write_to_log(message, "INFO")
     print(f"LOG: {message}")  # Also print to console for debugging
 
-def log_error(message):
-    """Log error message"""
-    write_to_log(message, "ERROR")
-    print(f"ERROR: {message}")
+def log_error(message, error=None):
+    """Log error message with optional stack trace"""
+    error_message = message
+    if error:
+        # Add stack trace to error message
+        stack_trace = traceback.format_exc()
+        error_message = f"{message}\nStack Trace:\n{stack_trace}"
+    
+    write_to_log(error_message, "ERROR")
+    print(f"ERROR: {error_message}")
 
 def log_warning(message):
     """Log warning message"""
@@ -29,6 +36,6 @@ def log_warning(message):
 # Create a simple logger that writes directly to file
 logger = type('Logger', (), {
     'info': lambda self, msg: log_info(msg),
-    'error': lambda self, msg: log_error(msg),
+    'error': lambda self, msg, err=None: log_error(msg, err),
     'warning': lambda self, msg: log_warning(msg),
 })()
