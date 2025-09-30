@@ -1,20 +1,13 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from openai import OpenAI
 import os
 from dotenv import load_dotenv
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from logger import logger
+from openairequest import request_openai
+from crowler import get_content
 
 load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
-openai_client = OpenAI(api_key=openai_api_key)
-
-system_prompt = """You are a helpful assistant that generates comments for a given text.
-  The comments should be in the same language as the text, even though the observations are in a different language."""
 
 app = FastAPI()
 
@@ -33,17 +26,23 @@ async def health_check():
 
 @app.post("/comments")
 async def get_comments(request: Request):
-    
-    print(request)
+    logger.info('Comments endpoint called')
     request_body = await request.json()
     
     text = request_body.get("text")
     tone = request_body.get("tone")
     observations = request_body.get("observations")
     
-    openai_response = request_openai(text, tone, observations)
+    logger.info(f'Processing comment request - text length: {len(text) if text else 0}, tone: {tone}')
     
-    return {"comment": openai_response}
+    try:
+        openai_response = request_openai(text, tone, observations)
+        logger.info('Comment generated successfully')
+        return {"comment": openai_response}
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f'Error generating comment: {error_message}')
+        raise HTTPException(status_code=500, detail=error_message)
   
 @app.post("/content")
 async def get_content(request: Request):
@@ -52,9 +51,7 @@ async def get_content(request: Request):
     url = request_body.get("url")
     
     try:
-        # Import crowler only when needed
-        import crowler
-        content = crowler.get_content(url)
+        content = get_content(url)
         logger.info(f'Content extracted successfully, length: {len(content) if content else 0} characters')
         return {"content": content}
     

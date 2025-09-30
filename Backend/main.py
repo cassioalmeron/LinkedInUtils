@@ -7,31 +7,12 @@ This script runs the crowler service with automatic hourly logging
 import os
 import sys
 import time
-import logging
 import threading
 import uvicorn
 from datetime import datetime
 from service_manager import manage_service
 from api import app
-
-# Configure logging
-log_dir = "logs"
-os.makedirs(log_dir, exist_ok=True)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(f'{log_dir}/logs.log'),
-        logging.StreamHandler()
-    ]
-)
-
-def six_hours_logger():
-    """Log service status every 6 hours"""
-    while True:
-        time.sleep(6 * 60 * 60)  # 6 hours
-        logging.info("Crowler service running - 6 hours elapsed")
+from logger import logger
 
 service_name = os.getenv('SERVICE_NAME')
 
@@ -54,7 +35,7 @@ def uninstall_service():
     
 def main():
     """Main function to run the FastAPI backend service"""
-    logging.info("LinkedIn Utils Backend service started")
+    logger.info("LinkedIn Utils Backend service started")
     
     api_port = int(os.getenv("API_PORT"))
     uvicorn.run(app, host="0.0.0.0", port=api_port)
