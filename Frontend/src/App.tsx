@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { toast, ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 import './App.css'
 import { getComments, getContentByUrl } from './services/CommentsService'
 import Footer from './components/Footer/Index'
@@ -15,7 +17,7 @@ function App() {
     const observations = (document.getElementById('observations-text') as HTMLTextAreaElement)?.value
 
     if (!inputText.trim()) {
-      setError('Please enter some text to generate a comment for.')
+      toast.error('Please enter some text to generate a comment for.')
       return
     }
 
@@ -27,6 +29,7 @@ function App() {
       const comment = await getComments(inputText, tone, observations || '')
       setGeneratedComment(comment)
     } catch (err) {
+      toast.error('Failed to generate comment.')
       setError('Failed to generate comment. Please check your API key and try again.')
       console.error('Error generating comment:', err)
     } finally {
@@ -38,7 +41,7 @@ function App() {
     const url = (document.getElementById('url') as HTMLInputElement)?.value
     
     if (!url.trim()) {
-      setError('Please enter a URL to search.')
+      toast.error('Please enter a URL to search.')
       return
     }
 
@@ -49,7 +52,7 @@ function App() {
       const content = await getContentByUrl(url)
       setInputText(content)
     } catch (err) {
-      setError('Failed to fetch content from URL. Please check the URL and try again.')
+      toast.error('Failed to fetch content from URL. Please check the URL and try again.')
       console.error('Error fetching content:', err)
     } finally {
       setIsSearching(false)
@@ -60,8 +63,15 @@ function App() {
     if (!generatedComment) return
     try {
       await navigator.clipboard.writeText(generatedComment)
+      toast.success('Comment copied to clipboard!')
     } catch {
-      // no-op
+      toast.error('Failed to copy to clipboard')
+    }
+  }
+
+  const handleUrlKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleGenerateClickByUrl()
     }
   }
 
@@ -76,6 +86,7 @@ function App() {
             id="url"
             type="url"
             placeholder="Enter URL here..."
+            onKeyPress={handleUrlKeyPress}
             style={{ 
               flex: 1, 
               padding: 12, 
@@ -194,6 +205,18 @@ function App() {
 
         <Footer />
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </>
   )
 }
